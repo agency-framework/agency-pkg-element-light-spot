@@ -1,0 +1,21 @@
+---
+image:
+  relative: true
+  src: 'assets/img/image-1.jpg'
+---
+<div class="pkg {{#if class}} {{{class}}}{{else}} controller{{/if}}" {{#block "attributes"}}data-pkg="agency-pkg-element-light-spot/debug" data-controller="agency-pkg-element-light-spot/Debug"{{/block}} data-index="{{{index}}}">
+  <div class="preview">
+      {{#if image}}
+        <img data-hook="image" src="{{#if image.relative}}{{{relativeToRoot}}}{{/if}}{{{image.src}}}" />
+      {{/if}}
+      <canvas class="black-mask" data-hook="blackMaskCanvas"></canvas>
+      <canvas class="mask" data-hook="maskCanvas"></canvas>
+  </div>
+  <div class="debug">
+    <canvas data-hook="canvas"></canvas>
+    <canvas data-hook="canvas"></canvas>
+    <canvas data-hook="canvas"></canvas>
+    <canvas data-hook="canvas"></canvas>
+    <canvas data-hook="canvas"></canvas>
+  </div>
+</div>

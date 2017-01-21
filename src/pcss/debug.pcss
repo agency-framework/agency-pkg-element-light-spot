@@ -1,0 +1,34 @@
+.pkg[data-pkg="agency-pkg-element-light-spot/debug"] {
+  padding: 20px;
+  background: #eee;
+  >.preview {
+    >img {
+      display: block;
+      width: 100%;
+    }
+    >.black-mask {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    position: relative;
+    >.mask {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      background: red;
+    }
+  }
+  >.debug {
+    padding-top: 20px;
+    overflow-x: scroll;
+    white-space: nowrap;
+    >* {
+      background: #eee;
+      width: 128px;
+      display: inline-block;
+    }
+  }
+}

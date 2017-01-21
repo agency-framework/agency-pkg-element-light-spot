@@ -1,0 +1,41 @@
+---
+
+---
+<style type="text/css">
+  {{#each fonts}}
+    {{#if this.base64}}
+      @font-face {
+        font-family: '{{name}}';
+        src: url('data:application/x-font-woff;charset=utf-8;base64,{{{base64 this.path}}}') format('{{{replace (extname this.path) "." ""}}}');
+        font-style: {{style}};
+        font-weight: {{weight}};
+      }
+
+    {{else}}
+      @font-face {
+        font-family: '{{name}}';
+        src: url('{{#unless this.absolute}}{{../relativeToRoot}}{{/unless}}{{{this.path}}}.eot');
+        src: url('{{#unless this.absolute}}{{../relativeToRoot}}{{/unless}}{{this.path}}.eot?#iefix') format('embedded-opentype'),
+        url('{{#unless this.absolute}}{{../relativeToRoot}}{{/unless}}{{this.path}}.woff') format('woff'),
+        url('{{#unless this.absolute}}{{../relativeToRoot}}{{/unless}}{{this.path}}.ttf') format('truetype');
+        font-style: {{style}};
+        font-weight: {{weight}};
+      }
+    {{/if}}
+  {{/each}}
+</style>
+
+<script type="text/javascript">
+  window.customFonts = [
+    {{#each fonts}}
+      {
+        name: '{{name}}',
+        props: {
+          style: '{{style}}',
+          weight: '{{weight}}'
+        },
+        testString: '{{testString}}'
+      },
+    {{/each}}
+  ]
+</script>

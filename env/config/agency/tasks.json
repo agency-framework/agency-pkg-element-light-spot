@@ -1,0 +1,355 @@
+{
+  "clean": {
+    "subtasks": [{
+      "name": "default",
+      "files": {
+        "dest": "<%= destination %>"
+      }
+    }]
+  },
+  "copy": {
+    "subtasks": [{
+      "name": "default",
+      "files": {
+        "src": ["test/assets/**/*.{ttf,woff,eot,svg,ico,png,jpg,gif}"],
+        "dest": "<%= destination %>/assets"
+      }
+    }, {
+      "name": "external",
+      "files": {
+        "src": ["test/external/**/*"],
+        "dest": "<%= destination %>/external"
+      }
+    }],
+    "watch": [{
+      "src": ["test/assets/**/*.{ttf,woff,eot,svg,ico,png,jpg,gif}"],
+      "tasks": ["default"]
+    }, {
+      "src": ["test/external/**/*"],
+      "tasks": ["external"]
+    }]
+  },
+  "handlebars": {
+    "registry": [{
+      "name": "main",
+      "excludes": ["<%= destination %>/docs/"],
+      "js": "test/js/packages.js",
+      "pcss": "test/pcss/partials.pcss",
+      "pcssCritical": "test/pcss/partials.critical.pcss"
+    }, {
+      "name": "docs",
+      "includes": ["<%= destination %>/docs/"],
+      "js": "test/js/packages.docs.js",
+      "pcss": "test/pcss/partials.docs.pcss",
+      "pcssCritical": "test/pcss/partials.critical.docs.pcss"
+    }],
+    "helpers": [{
+      "name": "doc",
+      "src": "agency-environment/lib/handlebars/helpers/doc",
+      "config": {
+        "template": "agency-pkg-documentation/tmpl/doc-template.hbs"
+      }
+    }],
+    "assets": "<%= destination %>/assets/",
+    "layouts": {
+      "files": {
+        "src": ["./test/tmpl/partials/layouts/**/*.hbs"]
+      },
+      "options": {
+        "base": "./test/tmpl/partials"
+      }
+    },
+    "partials": {
+      "files": {
+        "src": ["./test/tmpl/partials/**/*.hbs", "./src/**/*.hbs", "!./src/docs"]
+      },
+      "options": {
+        "base": "./test/tmpl/partials"
+      }
+    },
+    "globals": {
+      "files": {
+        "cwd": "./test/data/",
+        "src": ["./globals/**/*.{json,yaml}"]
+      }
+    },
+    "scripts": {
+      "js": {
+        "main": "<%= destination %>/js/app.js",
+        "mainDocs": "<%= destination %>/js/appDocs.js",
+        "embed": [
+          "<%= destination %>/js/embed/embed.js"
+        ]
+      },
+      "css": {
+        "main": "css/style.css",
+        "critical": "<%= destination %>/css/critical.css",
+        "mainDocs": "css/style.docs.css",
+        "criticalDocs": "<%= destination %>/css/critical.docs.css"
+      }
+    },
+    "subtasks": [{
+      "name": "pages",
+      "layout": "layouts/default",
+      "renderingOnce": false,
+      "files": {
+        "src": ["./test/tmpl/**/*.hbs", "!./test/tmpl/partials/**/*.hbs"],
+        "dest": "<%= destination %>/"
+      },
+      "data": {
+        "cwd": "./test/data/",
+        "src": ["./**/*.{json,yaml}", "!./globals/**/*.{json,yaml}"]
+      }
+    }, {
+      "name": "docs",
+      "layout": "agency-pkg-documentation/layout-detail",
+      "renderingOnce": false,
+      "files": {
+        "src": ["./node_modules/agency-pkg-documentation/docs-pkg/*.hbs"],
+        "dest": "<%= destination %>/docs/",
+        "base": "./node_modules/agency-pkg-documentation/docs-pkg/"
+      },
+      "data": {
+        "cwd": "./node_modules/agency-pkg-documentation/docs-pkg/data/",
+        "src": ["./**/*.{json,yaml}", "!./globals/**/*.{json,yaml}"]
+      }
+    }, {
+      "name": "partial-docs",
+      "layout": "agency-pkg-documentation/layout-detail",
+      "renderingOnce": false,
+      "files": {
+        "src": ["./test/tmpl/partials/**/*.hbs", "!./test/tmpl/partials/layouts/**/*.hbs"],
+        "dest": "<%= destination %>/docs/partials/",
+        "base": "./test/tmpl/partials"
+      }
+    }, {
+      "name": "src-docs",
+      "layout": "agency-pkg-documentation/layout-detail",
+      "renderingOnce": false,
+      "files": {
+        "src": ["./src/**/*.hbs"],
+        "dest": "<%= destination %>/docs/src",
+        "base": "./src/"
+      }
+    }, {
+      "name": "docs-packages",
+      "layout": "agency-pkg-documentation/layout-detail",
+      "renderingOnce": true,
+      "files": {
+        "src": [],
+        "dest": "<%= destination %>/docs/packages",
+        "base": "./node_modules/"
+      }
+    }],
+    "watch": [{
+      "src": ["src/**/*.hbs", "test/tmpl/**/*.hbs", "test/data/**/*.json"]
+    }]
+  },
+  "registerpackages": {
+    "subtasks": [{
+      "name": "default",
+      "pattern": [
+        "agency-pkg-*",
+        "gp-pkg-*"
+      ]
+    }]
+  },
+  "postcss": {
+    "subtasks": [{
+      "name": "default",
+      "packagePattern": [
+        "agency-pkg-*",
+        "gp-pkg-*"
+      ],
+      "sourcemap": true,
+      "plugins": [{
+        "name": "postcss-import",
+        "params": []
+      }, {
+        "name": "precss",
+        "params": []
+      }, {
+        "name": "postcss-calc",
+        "params": []
+      }, {
+        "name": "postcss-clearfix",
+        "params": []
+      }, {
+        "name": "autoprefixer",
+        "params": [{
+          "browsers": ["> 2%", "last 2 versions", "IE 9", "Firefox ESR"]
+        }]
+      }, {
+        "name": "postcss-discard-comments",
+        "params": []
+      }, {
+        "name": "cssnano",
+        "params": []
+      }],
+      "files": {
+        "src": ["./test/pcss/style.pcss", "./test/pcss/critical.pcss", "./test/pcss/style.docs.pcss", "./test/pcss/critical.docs.pcss"],
+        "dest": "<%= destination %>/css"
+      }
+    }],
+    "watch": [{
+      "src": ["test/pcss/**/*.pcss", "src/**/*.pcss"]
+    }]
+  },
+  "purecss": {
+    "prefix": "grid",
+    "columnHasPrefix": true,
+    "columns": 12,
+    "columnPrefix": "col",
+    "breakpoints": {
+      "default": {
+        "gutterWidth": "0.9375rem",
+        "wrapper": {}
+      },
+      "xs": {
+        "width": "30rem",
+        "wrapper": {
+          "margin": "auto",
+          "max-width": "30rem"
+        }
+      },
+      "sm": {
+        "width": "48rem",
+        "wrapper": {
+          "max-width": "48rem"
+        }
+      },
+      "md": {
+        "width": "62rem",
+        "wrapper": {
+          "max-width": "62rem"
+        }
+      },
+      "lg": {
+        "width": "75rem",
+        "wrapper": {
+          "max-width": "75rem"
+        }
+      }
+    },
+    "files": {
+      "dest": "./generated/pcss/",
+      "src": ["base", "grids-core"]
+    }
+  },
+  "sitemap": {
+    "subtasks": [{
+      "name": "default",
+      "domain": "http://www.example.com",
+      "files": {
+        "src": ["<%= destination %>/**/*.html", "!<%= destination %>/partials/**/*.html"],
+        "dest": "<%= destination %>"
+      }
+    }]
+  },
+  "webpack": {
+    "subtasks": [{
+      "name": "app",
+      "hotReplacement": true,
+      "entry": {
+        "app": "./test/js/main",
+        "appDocs": "./test/js/main.docs"
+      },
+      "plugins": [{
+        "script": "agency-environment/lib/webpack/plugins/provide",
+        "config": {
+          "$": "jquery",
+          "jQuery": "jquery",
+          "window.jQuery": "jquery",
+          "root.jQuery": "jquery"
+        }
+      }, {
+        "script": "agency-environment/lib/webpack/plugins/polyfills"
+      }, {
+        "script": "agency-environment/lib/webpack/plugins/dedupe"
+      }, {
+        "script": "agency-environment/lib/webpack/plugins/uglify",
+        "config": {
+          "compress": {
+
+          }
+        }
+      }],
+      "module": {
+        "preLoaders": [{
+          "test": ".js$",
+          "exclude": "node_modules",
+          "loader": "jshint-loader"
+        }],
+        "loaders": [{
+          "test": ".hbs$",
+          "loader": "handlebars-loader",
+          "query": {
+            "knownHelpers": ["block", "content"],
+            "helperDirs": [
+              "<%= root %>/test/tmpl/partials"
+            ],
+            "debug": false
+          },
+          "agency": {
+            "customs": ["agency-environment/lib/handlebars/customs/yamlExclude"]
+          }
+        }, {
+          "test": ".css$",
+          "loader": "style-loader!css-loader"
+        }, {
+          "test": ".(png|jpg|gif|svg|ttf|woff|eot)$",
+          "loader": "url-loader?limit=100000"
+        }, {
+          "test": ".modernizrrc$",
+          "loader": "modernizr"
+        }]
+      },
+      "resolve": {
+        "alias": {
+          "modernizr$": "<%= root %>/.modernizrrc"
+        }
+      },
+      "files": {
+        "src": ["./test/js/main.js"],
+        "dest": "<%= destination %>/js/[name].js",
+        "library": ["[name]"]
+      }
+    }, {
+      "name": "embed",
+      "entry": {
+        "embed": "./test/js/embed"
+      },
+      "plugins": [{
+        "script": "agency-environment/lib/webpack/plugins/dedupe"
+      }, {
+        "script": "agency-environment/lib/webpack/plugins/uglify",
+        "config": {
+          "compress": {
+            "drop_console": false
+          }
+        }
+      }],
+      "module": {
+        "preLoaders": [{
+          "test": ".js$",
+          "exclude": "node_modules",
+          "loader": "jshint-loader"
+        }],
+        "loaders": [{
+          "test": ".modernizrrc$",
+          "loader": "modernizr"
+        }]
+      },
+      "resolve": {
+        "alias": {
+          "modernizr$": "<%= root %>/.modernizrrc"
+        }
+      },
+      "files": {
+        "src": ["./test/js/embed"],
+        "dest": "<%= destination %>/js/embed/[name].js",
+        "library": ["[name]"]
+      }
+    }]
+  }
+}
