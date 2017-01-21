@@ -79,12 +79,11 @@ module.exports = Controller.extend({
             prepareCanvas(this, canvas);
         }.bind(this));
 
-        generateLightSpot(this, [0.166666, 0.333333, 0.5, 0.666666, 0.833333, 1]).then(function() {
+        generateLightSpot(this).then(function() {
             generateAssets(this, this.imageEl).then(function() {
                 Promise.all([render(this)]).then(function() {
-
                     this.blackMaskCanvasCtx.globalCompositeOperation = 'destination-out';
-                    this.blackMaskCanvasCtx.drawImage(this.maskCanvasEl,0, 0, this.blackMaskCanvasEl.width, this.blackMaskCanvasEl.height);
+                    this.blackMaskCanvasCtx.drawImage(this.maskCanvasEl, 0, 0, this.blackMaskCanvasEl.width, this.blackMaskCanvasEl.height);
 
 
                     this.model.complete = true;
@@ -109,7 +108,7 @@ function prepareCanvas(scope, canvas) {
 
 function render(scope) {
     return new Promise(function(resolve) {
-        var lightSpotEl = lightSpotEls[this.model.index];
+
 
         var position = new Vector((this.canvasList[0].width / 2) - lightSpotEl.width / 16, (this.canvasList[0].height / 2) - lightSpotEl.height / 16);
 
@@ -245,32 +244,31 @@ function resize(ctx, canvas) {
 
 }
 
-var lightSpotEls = [];
+var lightSpotEl;
 
-function generateLightSpot(scope, values) {
+function generateLightSpot(scope) {
     return new Promise(function(resolve) {
-        var lightSpotEl, lightSpotCtx;
-        values.forEach(function(value) {
-            lightSpotEl = document.createElement('canvas');
-            lightSpotCtx = lightSpotEl.getContext('2d');
-            var radius = 300;
-            lightSpotEl.width = radius * 2;
-            lightSpotEl.height = radius * 2;
-            var x = radius,
-                y = radius;
-            var radialGradient = lightSpotCtx.createRadialGradient(x, y, 0, x, y, radius);
-            radialGradient.addColorStop(0.0, 'rgba(255,255,255,1)');
-            radialGradient.addColorStop(0.2, 'rgba(255,255,255,1)');
-            radialGradient.addColorStop(0.6, 'rgba(255,255,255,0.5');
-            radialGradient.addColorStop(1, 'rgba(255,255,255,0');
-            lightSpotCtx.fillStyle = radialGradient;
-            lightSpotCtx.beginPath();
-            lightSpotCtx.arc(x, y, radius, 0, 2 * Math.PI);
-            lightSpotCtx.fill();
-
-            lightSpotEls.push(lightSpotEl);
-
-        });
+        var lightSpotCtx;
+        lightSpotEl = document.createElement('canvas');
+        lightSpotCtx = lightSpotEl.getContext('2d');
+        var radius = 300;
+        lightSpotEl.width = radius * 2;
+        lightSpotEl.height = radius * 2;
+        var x = radius,
+            y = radius;
+        var radialGradient = lightSpotCtx.createRadialGradient(x, y, 0, x, y, radius);
+        radialGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        if (!(/Safari/.test(navigator.userAgent))) {
+// @TODO Hier muss noch was gemacht werden!
+            radialGradient.addColorStop(0.2, 'rgba(255, 255, 255, 1)');
+            radialGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.5');
+        }
+        radialGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        console.log('generateLightSpot');
+        lightSpotCtx.beginPath();
+        lightSpotCtx.arc(x, y, radius, 0, 2 * Math.PI);
+        lightSpotCtx.fillStyle = radialGradient;
+        lightSpotCtx.fill();
 
         resolve();
     }.bind(scope));

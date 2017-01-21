@@ -9,6 +9,10 @@ var makeVideoPlayableInline = require('iphone-inline-video');
 
 var TYPES = new Enum(['TYPE_1', 'TYPE_2', 'TYPE_3']);
 
+    global.navigator.getUserMedia = global.navigator.getUserMedia ||
+global.navigator.mozGetUserMedia ||
+global.navigator.webkitGetUserMedia;
+
 module.exports = Controller.extend({
 
     modelConstructor: DomModel.extend({
@@ -76,29 +80,38 @@ module.exports = Controller.extend({
         makeVideoPlayableInline(this.videoEl);
 
         this.maskCanvasEl = this.queryByHook('maskCanvas');
-        prepareCanvas(this, this.maskCanvasEl);
         this.maskCanvasCtx = this.maskCanvasEl.getContext('2d');
         this.blackMaskCanvasEl = this.queryByHook('blackMaskCanvas');
         this.blackMaskCanvasCtx = this.blackMaskCanvasEl.getContext('2d');
 
-
-        generateLightSpot(this, [0.166666, 0.333333, 0.5, 0.666666, 0.833333, 1]).then(function() {
-            generateAssets(this, this.imageEl).then(function() {
-                Promise.all([setupCamera(this)]).then(function() {
-
-                    global.animationFrame.add(function() {
-                        render(this);
-
-                        this.blackMaskCanvasCtx.globalCompositeOperation = 'source-over';
-                        this.blackMaskCanvasCtx.drawImage(blackCanvasEl, 0, 0, this.imageEl.width, this.imageEl.height);
-                        this.blackMaskCanvasCtx.globalCompositeOperation = 'destination-out';
-                        this.blackMaskCanvasCtx.drawImage(this.maskCanvasEl, 0, 0, this.blackMaskCanvasEl.width, this.blackMaskCanvasEl.height);
-                    }.bind(this));
-
-                    this.model.complete = true;
-
-                }.bind(this));
+        Promise.all([new Promise(function(resolve) {
+            this.imageEl.addEventListener('load', function() {
+                resolve();
+            }.bind(this), false);
+            this.imageEl.setAttribute('src', this.imageEl.getAttribute('data-src'));
+        }.bind(this)), new Promise(function(resolve) {
+            generateLightSpot(this).then(function(lightSpotEl) {
+                this.lightSpotEl = lightSpotEl;
+                resolve();
             }.bind(this));
+        }.bind(this))]).then(function() {
+
+            Promise.all([generateAssets(this), setupCamera(this)]).then(function() {
+                prepareCanvas(this, this.maskCanvasEl);
+
+                global.animationFrame.add(function() {
+                    render(this);
+
+                    this.blackMaskCanvasCtx.globalCompositeOperation = 'source-over';
+                    this.blackMaskCanvasCtx.drawImage(blackCanvasEl, 0, 0, this.imageEl.width, this.imageEl.height);
+                    this.blackMaskCanvasCtx.globalCompositeOperation = 'destination-out';
+                    this.blackMaskCanvasCtx.drawImage(this.maskCanvasEl, 0, 0, this.blackMaskCanvasEl.width, this.blackMaskCanvasEl.height);
+                }.bind(this));
+
+                this.model.complete = true;
+
+            }.bind(this));
+
         }.bind(this));
 
 
@@ -107,18 +120,22 @@ module.exports = Controller.extend({
 
 function setupCamera(scope) {
     return new Promise(function(resolve) {
+
         // Get access to the camera!
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        if ( global.navigator.getUserMedia) {
             // Not adding `{ audio: true }` since we only want video now
-            global.navigator.mediaDevices.getUserMedia({
+            global.navigator.getUserMedia({
                 video: true
-            }).then(function(stream) {
+            },function(stream) {
                 scope.videoEl.src = window.URL.createObjectURL(stream);
                 resolve();
             }, function() {
                 scope.videoEl = null;
                 resolve();
             });
+        } else {
+            scope.videoEl = null;
+            resolve();
         }
     });
 }
@@ -141,14 +158,15 @@ function render(scope) {
 
         var width = this.blackMaskCanvasEl.width;
         var height = this.blackMaskCanvasEl.height;
-        var position = new Vector((width / 2) - lightSpotEl.width / 16, (height / 2) - lightSpotEl.height / 16);
 
         if (this.videoEl) {
             this.maskCanvasCtx.drawImage(this.videoEl, 0, 0, this.maskCanvasEl.width, this.maskCanvasEl.height);
         } else {
+            var position = new Vector((width / 2) - this.lightSpotEl.width / 16, (height / 2) - this.lightSpotEl.height / 16);
+
             this.maskCanvasCtx.drawImage(this.imageEl, 0, 0, this.maskCanvasEl.width, this.maskCanvasEl.height);
             this.maskCanvasCtx.globalCompositeOperation = 'lighter';
-            this.maskCanvasCtx.drawImage(lightSpotEl, position.x, position.y, lightSpotEl.width / 8, lightSpotEl.height / 8);
+            this.maskCanvasCtx.drawImage(this.lightSpotEl, position.x, position.y, this.lightSpotEl.width / 8, this.lightSpotEl.height / 8);
         }
         grayscale(this.maskCanvasCtx, this.maskCanvasEl);
         resize(this.maskCanvasCtx, this.maskCanvasEl);
@@ -219,36 +237,10 @@ function resize(ctx, canvas) {
 
 }
 
-var lightSpotEl;
-
-function generateLightSpot(scope, values) {
-    return new Promise(function(resolve) {
-        var lightSpotCtx;
-        lightSpotEl = document.createElement('canvas');
-        lightSpotCtx = lightSpotEl.getContext('2d');
-        var radius = 300;
-        lightSpotEl.width = radius * 2;
-        lightSpotEl.height = radius * 2;
-        var x = radius,
-            y = radius;
-        var radialGradient = lightSpotCtx.createRadialGradient(x, y, 0, x, y, radius);
-        radialGradient.addColorStop(0.0, 'rgba(255,255,255,1)');
-        radialGradient.addColorStop(0.2, 'rgba(255,255,255,1)');
-        radialGradient.addColorStop(0.6, 'rgba(255,255,255,0.5');
-        radialGradient.addColorStop(1, 'rgba(255,255,255,0');
-        lightSpotCtx.fillStyle = radialGradient;
-        lightSpotCtx.beginPath();
-        lightSpotCtx.arc(x, y, radius, 0, 2 * Math.PI);
-        lightSpotCtx.fill();
 
 
-
-        resolve();
-    }.bind(scope));
-}
-
-
-function generateAssets(scope, image) {
+function generateAssets(scope) {
+    var image = scope.imageEl;
     return new Promise(function(resolve) {
         whiteCanvasEl = document.createElement('canvas');
         whiteCanvasCtx = whiteCanvasEl.getContext('2d');
@@ -277,5 +269,35 @@ function generateAssets(scope, image) {
 
 
         resolve();
+    }.bind(scope));
+}
+
+
+
+function generateLightSpot(scope) {
+    return new Promise(function(resolve) {
+        var lightSpotCtx;
+        var lightSpotEl = document.createElement('canvas');
+        lightSpotCtx = lightSpotEl.getContext('2d');
+        var radius = 300;
+        lightSpotEl.width = radius * 2;
+        lightSpotEl.height = radius * 2;
+        var x = radius,
+            y = radius;
+        var radialGradient = lightSpotCtx.createRadialGradient(x, y, 0, x, y, radius);
+        radialGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        if (!(/Safari/.test(navigator.userAgent))) {
+            // @TODO Hier muss noch was gemacht werden!
+            radialGradient.addColorStop(0.2, 'rgba(255, 255, 255, 1)');
+            radialGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.5');
+        }
+        radialGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        console.log('generateLightSpot');
+        lightSpotCtx.beginPath();
+        lightSpotCtx.arc(x, y, radius, 0, 2 * Math.PI);
+        lightSpotCtx.fillStyle = radialGradient;
+        lightSpotCtx.fill();
+
+        resolve(lightSpotEl);
     }.bind(scope));
 }

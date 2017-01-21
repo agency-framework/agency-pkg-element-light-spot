@@ -6,7 +6,7 @@ image:
 <div class="pkg {{#if class}} {{{class}}}{{else}} controller{{/if}}" {{#block "attributes"}}data-pkg="agency-pkg-element-light-spot" data-controller="agency-pkg-element-light-spot"{{/block}}>
   <div class="preview">
       {{#if image}}
-        <img data-hook="image" src="{{#if image.relative}}{{{relativeToRoot}}}{{/if}}{{{image.src}}}" />
+        <img data-hook="image" data-src="{{#if image.relative}}{{{relativeToRoot}}}{{/if}}{{{image.src}}}" />
       {{/if}}
       <canvas class="black-mask" data-hook="blackMaskCanvas"></canvas>
       <canvas class="mask" data-hook="maskCanvas"></canvas>
