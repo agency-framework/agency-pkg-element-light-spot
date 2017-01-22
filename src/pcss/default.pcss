@@ -1,36 +1,71 @@
-  .pkg[data-pkg="agency-pkg-element-light-spot"] {
-    background: #eee;
-    >.preview {
-      >img {
-        display: block;
-        width: 100%;
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+.pkg[data-pkg="agency-pkg-element-light-spot"] {
+  background: #eee;
+  height: 100%;
+  >.preview {
+    pointer-events: none;
+    overflow: hidden;
+    height: 100%;
+    >img {
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: block;
+      /*width: 100%;*/
+      width: auto;
+      height: 100%;
+    }
+    >.black-mask {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      canvas {
+        position: relative;
+        width: auto;
+        height: auto;
+        will-change: filter;
+        filter: blur(calc((20 / 320) * 100)vw);
       }
-      >.black-mask {
+      &:after {
+        content: "";
+        display: block;
+        /*background: red;*/
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-      }
-      position: relative;
-      >.mask {
-        position: absolute;
-        right: 0;
-        bottom: 0;
-        background: white;
-        /*display: none;*/
+        box-shadow: inset 0 0 calc((40 / 320) * 100)vw calc((30 / 320) * 100)vw black;
       }
     }
-    video {
+    position: relative;
+    >.mask {
+      display: none;
       position: absolute;
       left: 0;
       top: 0;
-      width: 128px;
-      z-index: 10;
-      /*display: none;*/
-    }
-
-    .mask, video {
-      display: none;
+      background: white;
     }
   }
+  video {
+    display: none;
+    position: absolute;
+    left: 128px;
+    top: 0;
+    width: 64px;
+    z-index: 10;
+    background: black;
+  }
+  &.js-debug {
+    .mask, video {
+      display: block;
+    }
+  }
+}

@@ -1,0 +1,22 @@
+.partial[data-partial="components/light-spot-debug"] {
+  position: relative;
+  >.debug {
+    width: calc(60 / 16)em;
+    padding: calc(10 / 16)em 0;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.6);
+    position: fixed;
+    top: 0;
+    left: 0;
+    >.value {
+      display: block;
+      font-size: calc(20 / 16)em;
+      color: white;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    [data-partial="elements/range-slider"] {
+      display: inline-block;
+    }
+  }
+}

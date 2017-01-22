@@ -1,0 +1,62 @@
+.partial[data-partial="components/light-spot"] {
+  position: relative;
+  height: 100%;
+  >.debug {
+    display: block;
+    pointer-events: none;
+    visibility: hidden;
+    width: calc(60 / 16)em;
+    padding: calc(10 / 16)em 0;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.6);
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    >.value {
+      display: block;
+      font-size: calc(20 / 16)em;
+      color: white;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    [data-partial="elements/range-slider"] {
+      display: inline-block;
+    }
+  }
+  [data-partial="elements/warning-layer"] {
+    will-change: opacity;
+    transition-property: opacity;
+    transition-duration: 1200ms;
+    transition-timing-function: ease;
+    >div {
+      button {
+        will-change: opacity;
+        transition-property: opacity;
+        transition-duration: 1200ms;
+        transition-timing-function: ease;
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+  }
+  &.js-hide-warning {
+    [data-partial="elements/warning-layer"] {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+  [data-pkg="agency-pkg-element-light-spot"].js-complete+.debug+[data-partial="elements/warning-layer"] {
+    >div {
+      button {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+  }
+  &.js-controls {
+    .debug {
+      pointer-events: auto;
+      visibility: visible;
+    }
+  }
+}

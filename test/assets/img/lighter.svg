@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1 Tiny//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11-tiny.dtd">
+<svg version="1.1" baseProfile="tiny"  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	 x="0px" y="0px" width="23.903px" height="58.088px" viewBox="0 0 23.903 58.088" xml:space="preserve">
+<path d="M13.4,21.292c1.035-1.757,7.791,0.527,7.922,2.562c0.059,0.913-3.394,1.703-3.394,1.703S12.629,22.599,13.4,21.292z"/>
+<path fill="none" stroke="#000000" stroke-miterlimit="10" d="M21.947,23.855c-1.734-1.75-5.186-3.496-8.447-3.089
+	c-6.344,0.792-13.109,4.209-11.868,7.429c1.412,3.662,12.117,1.025,17.208-2.745c1.623-1.202,2.963-0.594,2.963-1.858"/>
+<path fill="none" stroke="#000000" stroke-miterlimit="10" d="M5.676,26.976c-0.342-0.247-9.833-7.418-2.239-25.79
+	c1.78-4.307,9.362,12.551,6.146,25.445"/>
+<path fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" d="M5.045,8.998c-1.034,3.274,1.896,8.443,1.436,11.66"/>
+<path fill="none" stroke="#000000" stroke-miterlimit="10" d="M1.582,28.05c0,0-0.768,22.98,2.587,27.447
+	c2.985,3.974,13.066,1.652,16.715-1.723c5.069-4.689,0.919-30.184,0.919-30.184"/>
+<line fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" x1="17.928" y1="26.076" x2="12.38" y2="20.932"/>
+</svg>

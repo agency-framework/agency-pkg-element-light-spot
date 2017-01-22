@@ -13,10 +13,5 @@ images:
     image:
       src: 'assets/img/image-4.jpg'
 ---
-<div class="grid-g">
-  {{#each images}}
-    <div class="grid-col-12-12">
-      {{{mixin "agency-pkg-element-light-spot/debug" this index=@index}}}
-    </div>
-  {{/each}}
-</div>
+
+{{{mixin "components/light-spot-debug" this}}}

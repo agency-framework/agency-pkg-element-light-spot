@@ -24,6 +24,7 @@
     "url": "git+https://github.com/agency-framework/agency-pkg-element-light-spot.git"
   },
   "scripts": {
+    "build": "node node_modules/gulp/bin/gulp build --serverConfig=node_modules/agency-boilerplate/env/config/agency/server.json --configTasks=./env/config/agency/tasks.json --env=package-build",
     "install": "node ./install.js",
     "heroku": "node node_modules/gulp/bin/gulp run --serverConfig=node_modules/agency-boilerplate/env/config/agency/server.json --configTasks=./env/config/agency/tasks.json --env=package-production --server=agency-server",
     "dev": "node node_modules/gulp/bin/gulp run --serverConfig=node_modules/agency-boilerplate/env/config/agency/server.json --configTasks=env/config/agency/tasks.json --env=package-development --server=agency-server",
@@ -36,6 +37,7 @@
     "node": "7"
   },
   "dependencies": {
-    "iphone-inline-video": "^1.9.6"
+    "iphone-inline-video": "^1.9.6",
+    "screenfull": "^3.0.2"
   }
 }

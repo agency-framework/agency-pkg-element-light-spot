@@ -1,0 +1,15 @@
+---
+
+---
+<div class="partial controller" data-partial="components/light-spot" data-controller="./partials/components/LightSpot">
+
+  {{{mixin "agency-pkg-element-light-spot" this target="[data-partial='components/light-spot']" index=@index}}}
+  <div class="debug">
+    {{{mixin "elements/range-slider" target="[data-partial='components/light-spot']" value="0.96078431372549" decimal-places="2" direction="vertical"}}}
+    <span class="value" data-hook="debugValue">0</span>
+  </div>
+
+
+  {{{mixin "elements/warning-layer"}}}
+
+</div>

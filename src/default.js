@@ -4,16 +4,23 @@ var Controller = require('agency-pkg-base/Controller');
 var DomModel = require('agency-pkg-base/DomModel');
 var Vector = require('agency-pkg-base/Vector');
 var Enum = require('enum');
+var utils = require('./utils');
+
+var history = require('agency-pkg-service-history');
+var viewport = require('agency-pkg-service-viewport');
+
 
 var makeVideoPlayableInline = require('iphone-inline-video');
 
 var TYPES = new Enum(['TYPE_1', 'TYPE_2', 'TYPE_3']);
 
-    global.navigator.getUserMedia = global.navigator.getUserMedia ||
-global.navigator.mozGetUserMedia ||
-global.navigator.webkitGetUserMedia;
+global.navigator.getUserMedia = global.navigator.getUserMedia ||
+    global.navigator.mozGetUserMedia ||
+    global.navigator.webkitGetUserMedia;
 
 module.exports = Controller.extend({
+
+    leftOffset: 0,
 
     modelConstructor: DomModel.extend({
         session: {
@@ -21,7 +28,14 @@ module.exports = Controller.extend({
                 type: 'boolean',
                 required: true,
                 default: function() {
-                    return true;
+                    return false;
+                }
+            },
+            hasCamera: {
+                type: 'boolean',
+                required: true,
+                default: function() {
+                    return false;
                 }
             },
             complete: {
@@ -44,7 +58,19 @@ module.exports = Controller.extend({
                 default: function() {
                     return TYPES.TYPE_1;
                 }
+            },
+            sensibility: {
+                type: 'number',
+                required: true,
+                default: function() {
+                    return (245 / 255);
+                }
             }
+        },
+
+
+        refresh: function() {
+            this.trigger('refresh');
         }
     }),
 
@@ -56,23 +82,22 @@ module.exports = Controller.extend({
         'model.complete': {
             type: 'booleanClass',
             name: 'js-complete'
+        },
+        'model.hasCamera': {
+            type: 'booleanClass',
+            name: 'js-has-camera'
         }
     },
 
-    events: {
-        'click': function() {
-            if (this.videoEl) {
-                this.videoEl.play();
-            }
-        }
-    },
+    events: {},
 
 
-    canvasList: [],
-    contextList: [],
     initialize: function() {
         Controller.prototype.initialize.apply(this, arguments);
-        this.imageEl = this.queryByHook('image');
+
+        this.model.on('refresh', onRefresh, this);
+
+        this.fallbackImageEl = this.queryByHook('fallbackImage');
 
 
         this.videoEl = this.queryByHook('video');
@@ -84,57 +109,84 @@ module.exports = Controller.extend({
         this.blackMaskCanvasEl = this.queryByHook('blackMaskCanvas');
         this.blackMaskCanvasCtx = this.blackMaskCanvasEl.getContext('2d');
 
+        if (this.targetModel) {
+            this.targetModel.spot = this.model;
+            this.targetModel.on('change:value', function(model, value) {
+                this.model.sensibility = value;
+                global.animationFrame.addOnce(function() {
+                    render(this);
+                }.bind(this));
+            }, this);
+        }
+
         Promise.all([new Promise(function(resolve) {
-            this.imageEl.addEventListener('load', function() {
+            this.fallbackImageEl.addEventListener('load', function() {
                 resolve();
             }.bind(this), false);
-            this.imageEl.setAttribute('src', this.imageEl.getAttribute('data-src'));
+            this.fallbackImageEl.setAttribute('src', this.fallbackImageEl.getAttribute('data-src'));
         }.bind(this)), new Promise(function(resolve) {
-            generateLightSpot(this).then(function(lightSpotEl) {
+            utils.generateLightSpot(this).then(function(lightSpotEl) {
                 this.lightSpotEl = lightSpotEl;
                 resolve();
             }.bind(this));
         }.bind(this))]).then(function() {
-
-            Promise.all([generateAssets(this), setupCamera(this)]).then(function() {
-                prepareCanvas(this, this.maskCanvasEl);
-
+            Promise.all([setupCamera(this)]).then(function() {
+                this.model.refresh();
+                this.model.complete = true;
                 global.animationFrame.add(function() {
                     render(this);
-
-                    this.blackMaskCanvasCtx.globalCompositeOperation = 'source-over';
-                    this.blackMaskCanvasCtx.drawImage(blackCanvasEl, 0, 0, this.imageEl.width, this.imageEl.height);
-                    this.blackMaskCanvasCtx.globalCompositeOperation = 'destination-out';
-                    this.blackMaskCanvasCtx.drawImage(this.maskCanvasEl, 0, 0, this.blackMaskCanvasEl.width, this.blackMaskCanvasEl.height);
                 }.bind(this));
-
-                this.model.complete = true;
-
             }.bind(this));
 
         }.bind(this));
 
-
+        history.register('debug', function(value) {
+            if (value && value.toLowerCase() !== 'false') {
+                this.model.debug = true;
+            }
+        }.bind(this));
     }
 });
+
+function onRefresh() {
+    generateAssets(this);
+    prepareCanvas(this, this.maskCanvasEl);
+    global.animationFrame.addOnce(function() {
+        render(this);
+    }.bind(this));
+}
+
+function render(scope) {
+    preRender(scope);
+    scope.blackMaskCanvasCtx.globalCompositeOperation = 'source-over';
+    scope.blackMaskCanvasCtx.drawImage(blackCanvasEl, 0, 0, scope.fallbackImageEl.width, scope.fallbackImageEl.height);
+    scope.blackMaskCanvasCtx.globalCompositeOperation = 'destination-out';
+
+    scope.blackMaskCanvasCtx.save();
+    scope.blackMaskCanvasCtx.translate(scope.blackMaskCanvasEl.width, 0);
+    scope.blackMaskCanvasCtx.scale(-1, 1);
+
+    scope.blackMaskCanvasCtx.drawImage(scope.maskCanvasEl, scope.leftOffset, 0, scope.blackMaskCanvasEl.width, scope.blackMaskCanvasEl.height);
+
+    scope.blackMaskCanvasCtx.restore();
+}
 
 function setupCamera(scope) {
     return new Promise(function(resolve) {
 
         // Get access to the camera!
-        if ( global.navigator.getUserMedia) {
+        if (global.navigator.getUserMedia) {
             // Not adding `{ audio: true }` since we only want video now
             global.navigator.getUserMedia({
                 video: true
-            },function(stream) {
+            }, function(stream) {
                 scope.videoEl.src = window.URL.createObjectURL(stream);
+                scope.model.hasCamera = true;
                 resolve();
             }, function() {
-                scope.videoEl = null;
                 resolve();
             });
         } else {
-            scope.videoEl = null;
             resolve();
         }
     });
@@ -144,160 +196,108 @@ var whiteCanvasEl, whiteCanvasCtx, blackCanvasEl, blackCanvasCtx;
 
 function prepareCanvas(scope, canvas) {
     canvas.width = 128;
-    canvas.height = (canvas.width / scope.imageEl.width) * scope.imageEl.height;
-    var context = canvas.getContext('2d');
-    scope.contextList.push(context);
+    canvas.height = (canvas.width / scope.fallbackImageEl.width) * scope.fallbackImageEl.height;
     // ctx.imageSmoothingEnabled = true;
     // ctx.mozImageSmoothingEnabled = true;
     // ctx.webkitImageSmoothingEnabled = true;
     // ctx.msImageSmoothingEnabled = true;
 }
 
-function render(scope) {
-    return new Promise(function(resolve) {
+function preRender(scope) {
 
-        var width = this.blackMaskCanvasEl.width;
-        var height = this.blackMaskCanvasEl.height;
+    var position = new Vector((scope.maskCanvasEl.width / 2) - scope.lightSpotEl.width / 16 + 25, (scope.maskCanvasEl.height / 2) - scope.lightSpotEl.height / 16);
 
-        if (this.videoEl) {
-            this.maskCanvasCtx.drawImage(this.videoEl, 0, 0, this.maskCanvasEl.width, this.maskCanvasEl.height);
-        } else {
-            var position = new Vector((width / 2) - this.lightSpotEl.width / 16, (height / 2) - this.lightSpotEl.height / 16);
+    switch (scope.model.type) {
+        case TYPES.TYPE_1:
 
-            this.maskCanvasCtx.drawImage(this.imageEl, 0, 0, this.maskCanvasEl.width, this.maskCanvasEl.height);
-            this.maskCanvasCtx.globalCompositeOperation = 'lighter';
-            this.maskCanvasCtx.drawImage(this.lightSpotEl, position.x, position.y, this.lightSpotEl.width / 8, this.lightSpotEl.height / 8);
-        }
-        grayscale(this.maskCanvasCtx, this.maskCanvasEl);
-        resize(this.maskCanvasCtx, this.maskCanvasEl);
+            if (scope.model.hasCamera) {
+                scope.maskCanvasCtx.drawImage(scope.videoEl, 0, 0, scope.maskCanvasEl.width, scope.maskCanvasEl.height);
+                utils.grayscale(scope.maskCanvasEl, scope.maskCanvasCtx, scope.model.sensibility);
+                utils.resize(scope.maskCanvasEl, scope.maskCanvasCtx);
 
-        // this.contextList[3].drawImage(this.imageEl, 0, 0, width, height);
-        // this.maskCanvasCtx.globalCompositeOperation = 'destination-in';
-        // this.maskCanvasCtx.drawImage(this.maskCanvasEl, 0, 0, this.maskCanvasEl.width, this.maskCanvasEl.height);
+            } else {
 
 
+                // START CREATE MASK
+                scope.maskCanvasCtx.globalCompositeOperation = 'source-over';
 
-        //         this.blackMaskCanvasCtx.globalCompositeOperation = 'destination-out';
-        // this.blackMaskCanvasCtx.drawImage(this.maskCanvasEl, 0, 0, this.maskCanvasEl.blackMaskCanvasCtx, this.maskCanvasEl.blackMaskCanvasCtx);
+                scope.maskCanvasCtx.drawImage(scope.fallbackImageEl, scope.leftOffset, 0, scope.fallbackImageEl.width, scope.fallbackImageEl.height);
+
+
+                scope.maskCanvasCtx.globalCompositeOperation = 'lighter';
+
+                scope.maskCanvasCtx.drawImage(scope.lightSpotEl, position.x, position.y, scope.lightSpotEl.width / 8, scope.lightSpotEl.height / 8);
 
 
 
-
-        resolve();
-    }.bind(scope));
-}
-
-function grayscale(ctx, canvas) {
-    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    var data = imageData.data;
-
-    for (var i = 0; i < data.length; i += 4) {
-        // var brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
-        var brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-
-        if (brightness > 240) {
-            brightness = 0;
-            // alpha
-            data[i + 3] = 255 * 1;
-        } else {
-            brightness = 255;
-            // alpha
-            data[i + 3] = 255 * 0;
-        }
-        // red
-        data[i] = brightness;
-        // green
-        data[i + 1] = brightness;
-        // blue
-        data[i + 2] = brightness;
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-
-}
-
-function resize(ctx, canvas) {
+                // scope.reflectCanvasCtx.scale(1,1);
+                //                 scope.reflectCanvasCtx.drawImage(scope.maskCanvasEl,0,0,scope.maskCanvasEl.width, scope.maskCanvasEl.height);
+                // scope.maskCanvasCtx.drawImage(scope.reflectCanvasEl,0,0,scope.reflectCanvasEl.width, scope.reflectCanvasEl.height);
 
 
-    var directions = [
-        [0, 0],
-        [2, 0],
-        [2, 2],
-        [0, 2]
-    ];
 
-    for (var i = 0; i < 4; i++) {
 
-        ctx.drawImage(ctx.canvas, -ctx.canvas.width * 0.1, -ctx.canvas.height * 0.1, canvas.width * 1.2, ctx.canvas.height * 1.2);
+                utils.grayscale(scope.maskCanvasEl, scope.maskCanvasCtx, scope.model.sensibility);
+                utils.resize(scope.maskCanvasEl, scope.maskCanvasCtx);
+
+                // END CREATE MASK
+                //
+            }
+
+
+            break;
+
+
 
     }
-
-
-
-
 }
 
 
 
 function generateAssets(scope) {
-    var image = scope.imageEl;
-    return new Promise(function(resolve) {
-        whiteCanvasEl = document.createElement('canvas');
-        whiteCanvasCtx = whiteCanvasEl.getContext('2d');
-        whiteCanvasEl.width = image.width;
-        whiteCanvasEl.height = image.height;
+    console.log('generateAssets');
 
-        whiteCanvasCtx.rect(0, 0, image.width, image.height);
-        whiteCanvasCtx.fillStyle = 'rgba(255,255,255,' + 1 + ')';
-        whiteCanvasCtx.fill();
+    var image = scope.fallbackImageEl;
 
-        blackCanvasEl = document.createElement('canvas');
-        blackCanvasCtx = blackCanvasEl.getContext('2d');
-        blackCanvasEl.width = image.width;
-        blackCanvasEl.height = image.height;
+    whiteCanvasEl = document.createElement('canvas');
+    whiteCanvasCtx = whiteCanvasEl.getContext('2d');
+    whiteCanvasEl.width = image.width;
+    whiteCanvasEl.height = image.height;
 
-        blackCanvasCtx.rect(0, 0, image.width, image.height);
-        blackCanvasCtx.fillStyle = 'rgba(0,0,0,' + 1 + ')';
-        blackCanvasCtx.fill();
+    whiteCanvasCtx.rect(0, 0, image.width, image.height);
+    whiteCanvasCtx.fillStyle = 'rgba(255,255,255,' + 1 + ')';
+    whiteCanvasCtx.fill();
 
-        scope.blackMaskCanvasEl.width = image.width;
-        scope.blackMaskCanvasEl.height = image.height;
+    blackCanvasEl = document.createElement('canvas');
+    blackCanvasCtx = blackCanvasEl.getContext('2d');
+    blackCanvasEl.width = image.width;
+    blackCanvasEl.height = image.height;
 
-        scope.blackMaskCanvasCtx.rect(0, 0, scope.blackMaskCanvasEl.width, scope.blackMaskCanvasEl.height);
-        scope.blackMaskCanvasCtx.fillStyle = '#000';
-        scope.blackMaskCanvasCtx.fill();
+    blackCanvasCtx.rect(0, 0, image.width, image.height);
+    blackCanvasCtx.fillStyle = 'rgba(0,0,0,' + 1 + ')';
+    blackCanvasCtx.fill();
+
+    scope.leftOffset = (scope.fallbackImageEl.naturalWidth * scope.fallbackImageEl.height / scope.fallbackImageEl.naturalHeight);
+    console.log('left 1', scope.leftOffset);
+    scope.leftOffset = (viewport.dimension.x - scope.leftOffset) / 2;
+    console.log('left 2', scope.leftOffset);
+
+    scope.blackMaskCanvasEl.style.cssText = 'left: ' + scope.leftOffset + 'px;';
+    image.style.cssText = 'left: ' + scope.leftOffset + 'px;';
+    scope.blackMaskCanvasEl.width = (scope.fallbackImageEl.naturalWidth * scope.fallbackImageEl.height / scope.fallbackImageEl.naturalHeight);
+    scope.blackMaskCanvasEl.height = (scope.fallbackImageEl.naturalHeight * scope.fallbackImageEl.height / scope.fallbackImageEl.naturalHeight);
+    // scope.blackMaskCanvasEl.width = viewport.dimension.x;
+    // scope.blackMaskCanvasEl.height = viewport.dimension.y;
+
+    scope.blackMaskCanvasCtx.rect(0, 0, scope.blackMaskCanvasEl.width, scope.blackMaskCanvasEl.height);
+    scope.blackMaskCanvasCtx.fillStyle = '#000';
+    scope.blackMaskCanvasCtx.fill();
 
 
-        resolve();
-    }.bind(scope));
-}
+    scope.reflectCanvasEl = document.createElement('canvas');
+    scope.reflectCanvasCtx = scope.reflectCanvasEl.getContext('2d');
 
+    scope.reflectCanvasEl.width = scope.maskCanvasEl.width;
+    scope.reflectCanvasEl.height = scope.maskCanvasEl.height;
 
-
-function generateLightSpot(scope) {
-    return new Promise(function(resolve) {
-        var lightSpotCtx;
-        var lightSpotEl = document.createElement('canvas');
-        lightSpotCtx = lightSpotEl.getContext('2d');
-        var radius = 300;
-        lightSpotEl.width = radius * 2;
-        lightSpotEl.height = radius * 2;
-        var x = radius,
-            y = radius;
-        var radialGradient = lightSpotCtx.createRadialGradient(x, y, 0, x, y, radius);
-        radialGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-        if (!(/Safari/.test(navigator.userAgent))) {
-            // @TODO Hier muss noch was gemacht werden!
-            radialGradient.addColorStop(0.2, 'rgba(255, 255, 255, 1)');
-            radialGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.5');
-        }
-        radialGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        console.log('generateLightSpot');
-        lightSpotCtx.beginPath();
-        lightSpotCtx.arc(x, y, radius, 0, 2 * Math.PI);
-        lightSpotCtx.fillStyle = radialGradient;
-        lightSpotCtx.fill();
-
-        resolve(lightSpotEl);
-    }.bind(scope));
 }
