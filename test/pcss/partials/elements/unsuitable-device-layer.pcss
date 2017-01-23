@@ -1,4 +1,4 @@
-.partial[data-partial="elements/warning-layer"] {
+.partial[data-partial="elements/unsuitable-device-layer"] {
   position: absolute;
   top: 0;
   left: 0;
@@ -40,16 +40,6 @@
       line-height: 2;
       font-size: calc((18 / 320) * 100)vw;
     }
-    button {
-      display: inline-block;
-      appearance: none;
-      background: transparent;
-      padding: calc((10 / 320) * 100)vw calc((20 / 320) * 100)vw;
-      font-size: calc((20 / 320) * 100)vw;
-      font-family: sans-serif;
-      text-transform: uppercase;
-      border: solid #fff calc((6 / 320) * 100)vw;
-    }
   }
   @media (orientation: landscape) {
     >div {
@@ -60,11 +50,6 @@
       p {
         margin-bottom: calc((10 / 320) * 100)vw;
         font-size: calc((9 / 320) * 100)vw;
-      }
-      button {
-        padding: calc((5 / 320) * 100)vw calc((10 / 320) * 100)vw;
-        font-size: calc((10 / 320) * 100)vw;
-        border: solid #fff calc((3 / 320) * 100)vw;
       }
     }
   }

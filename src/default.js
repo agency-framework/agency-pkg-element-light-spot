@@ -133,7 +133,7 @@ module.exports = Controller.extend({
             Promise.all([setupCamera(this)]).then(function() {
                 this.model.refresh();
                 this.model.complete = true;
-                global.animationFrame.add(function() {
+                (this.model.hasCamera ? global.animationFrame.add : global.animationFrame.addOnce)(function() {
                     render(this);
                 }.bind(this));
             }.bind(this));

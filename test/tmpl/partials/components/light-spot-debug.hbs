@@ -2,14 +2,13 @@
 images: #
 ---
 <div class="partial controller" data-partial="components/light-spot-debug" data-controller="./partials/components/LightSpotDebug">
-
-    {{#each images}}
-      <div>
-        {{{mixin "agency-pkg-element-light-spot/debug" this index=@index target="[data-partial='components/light-spot-debug']"}}}
-      </div>
-    {{/each}}
-    <div class="debug">
-      {{{mixin "elements/range-slider" target="[data-partial='components/light-spot-debug']" value="0.96078431372549" decimal-places="2" direction="vertical"}}}
-      <span class="value" data-hook="debugValue">0</span>
+  {{#each images}}
+    <div>
+      {{{mixin "agency-pkg-element-light-spot/debug" this index=@index target="[data-partial='components/light-spot-debug']"}}}
     </div>
+  {{/each}}
+  <div class="debug">
+    {{{mixin "elements/range-slider" target="[data-partial='components/light-spot-debug']" value="0.96078431372549" decimal-places="2" direction="vertical"}}}
+    <span class="value" data-hook="debugValue">0</span>
+  </div>
 </div>

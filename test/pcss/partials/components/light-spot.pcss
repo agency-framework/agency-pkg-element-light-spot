@@ -23,11 +23,13 @@
       display: inline-block;
     }
   }
-  [data-partial="elements/warning-layer"] {
+  [data-partial="elements/unsuitable-device-layer"], [data-partial="elements/warning-layer"] {
     will-change: opacity;
     transition-property: opacity;
     transition-duration: 1200ms;
     transition-timing-function: ease;
+  }
+  [data-partial="elements/warning-layer"] {
     >div {
       button {
         will-change: opacity;
@@ -43,6 +45,16 @@
     [data-partial="elements/warning-layer"] {
       opacity: 0;
       pointer-events: none;
+    }
+  }
+  [data-partial="elements/unsuitable-device-layer"] {
+    opacity: 0;
+    pointer-events: none;
+  }
+  &.js-hide-unsuitable-device {
+    [data-partial="elements/unsuitable-device-layer"] {
+      opacity: 1;
+      pointer-events: auto;
     }
   }
   [data-pkg="agency-pkg-element-light-spot"].js-complete+.debug+[data-partial="elements/warning-layer"] {

@@ -42,6 +42,13 @@ module.exports = Controller.extend({
                 default: function() {
                     return false;
                 }
+            },
+            hideUnsuitableDevice: {
+                type: 'boolean',
+                required: true,
+                default: function() {
+                    return true;
+                }
             }
         }
     }),
@@ -60,9 +67,13 @@ module.exports = Controller.extend({
         'model.hideWarning': {
             type: 'booleanClass',
             name: 'js-hide-warning'
+        },
+        'model.hideUnsuitableDevice': {
+            type: 'booleanClass',
+            name: 'js-hide-unsuitable-device',
+            invert: true
         }
     },
-
     events: {
         'click [data-hook="applyButton"]': onClickApply
     },
@@ -89,6 +100,10 @@ module.exports = Controller.extend({
                 this.model.controls = true;
             }
         }.bind(this));
+console.log(navigator.userAgent.toLowerCase());
+        if (/iphone/.test(navigator.userAgent.toLowerCase())) {
+            this.model.hideUnsuitableDevice = false;
+        }
 
     }
 });
