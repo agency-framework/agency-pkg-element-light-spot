@@ -23,12 +23,6 @@
       display: inline-block;
     }
   }
-  [data-partial="elements/unsuitable-device-layer"], [data-partial="elements/warning-layer"] {
-    will-change: opacity;
-    transition-property: opacity;
-    transition-duration: 1200ms;
-    transition-timing-function: ease;
-  }
   [data-partial="elements/warning-layer"] {
     >div {
       button {
@@ -51,7 +45,13 @@
     opacity: 0;
     pointer-events: none;
   }
-  &.js-hide-unsuitable-device {
+  [data-partial="elements/unsuitable-device-layer"], [data-partial="elements/warning-layer"] {
+    will-change: opacity;
+    transition-property: opacity;
+    transition-duration: 1200ms;
+    transition-timing-function: ease;
+  }
+  &.js-show-unsuitable-device {
     [data-partial="elements/unsuitable-device-layer"] {
       opacity: 1;
       pointer-events: auto;
