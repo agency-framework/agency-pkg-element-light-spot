@@ -100,7 +100,7 @@ module.exports = Controller.extend({
                 this.model.controls = true;
             }
         }.bind(this));
-console.log(navigator.userAgent.toLowerCase());
+        
         if (/iphone/.test(navigator.userAgent.toLowerCase())) {
             this.model.hideUnsuitableDevice = false;
         }
